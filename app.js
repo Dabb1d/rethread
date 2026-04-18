@@ -127,6 +127,7 @@ function switchTab(name) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   $('#sidebar').classList.remove('open');
   renderTab(name);
+  setTimeout(() => injectIcons(), 0);
 }
 
 function renderTab(name) {
@@ -1107,12 +1108,628 @@ function bindEvents() {
   };
 }
 
+// ===== ICON INJECTION =====
+function injectIcons(root = document) {
+  root.querySelectorAll('[data-icon]').forEach(el => {
+    if (el.dataset.iconInjected) return;
+    const name = el.dataset.icon;
+    const size = el.dataset.iconSize || 18;
+    // Preserve existing text content as suffix
+    const text = el.innerHTML;
+    el.innerHTML = icon(name, size) + (text ? ' ' + text : '');
+    el.dataset.iconInjected = '1';
+  });
+}
+
+// ===== PRODUCTS: CARD VIEW =====
+let productView = 'grid';
+let productFilter = { category: 'all', stock: 'all', sort: 'name' };
+
+function buildCategoryChips() {
+  const cats = [...new Set(state.products.map(p => p.category))];
+  const chips = ['all', ...cats];
+  const host = $('#categoryChips');
+  if (!host) return;
+  host.innerHTML = chips.map(c => `
+    <button class="chip ${productFilter.category === c ? 'active' : ''}" data-cat="${escape(c)}">
+      ${c === 'all' ? 'All' : escape(c)}
+      <span class="chip-count">${c === 'all' ? state.products.length : state.products.filter(p => p.category === c).length}</span>
+    </button>
+  `).join('');
+  host.querySelectorAll('.chip').forEach(b => b.onclick = () => {
+    productFilter.category = b.dataset.cat;
+    renderProducts();
+  });
+}
+
+function filteredSortedProducts() {
+  const q = ($('#productSearch')?.value || '').toLowerCase();
+  let list = state.products.filter(p =>
+    (!q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
+    && (productFilter.category === 'all' || p.category === productFilter.category)
+    && (productFilter.stock === 'all'
+        || (productFilter.stock === 'in' && p.stock > p.reorder)
+        || (productFilter.stock === 'low' && p.stock > 0 && p.stock <= p.reorder)
+        || (productFilter.stock === 'out' && p.stock === 0))
+  );
+  const sorters = {
+    name: (a, b) => a.name.localeCompare(b.name),
+    margin: (a, b) => ((b.price - b.cost) / b.price) - ((a.price - a.cost) / a.price),
+    price: (a, b) => b.price - a.price,
+    stock: (a, b) => b.stock - a.stock,
+    sold: (a, b) => b.sold - a.sold,
+    revenue: (a, b) => b.sold * b.price - a.sold * a.price,
+  };
+  list.sort(sorters[productFilter.sort] || sorters.name);
+  return list;
+}
+
+function categoryColor(cat) {
+  const colors = ['#0984e3', '#00b894', '#6c5ce7', '#e17055', '#fdcb6e', '#74b9ff', '#fd79a8', '#a29bfe'];
+  let h = 0;
+  for (let i = 0; i < cat.length; i++) h = (h * 31 + cat.charCodeAt(i)) & 0xffff;
+  return colors[h % colors.length];
+}
+
+function productInitials(name) {
+  return name.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+}
+
+function renderProducts() {
+  const totalValue = state.products.reduce((s, p) => s + p.cost * p.stock, 0);
+  const totalRetail = state.products.reduce((s, p) => s + p.price * p.stock, 0);
+  const avgMargin = state.products.length ? state.products.reduce((s, p) => s + ((p.price - p.cost) / p.price * 100), 0) / state.products.length : 0;
+  $('#kpiProducts').innerHTML = kpiBlock([
+    { label: 'Total SKUs', val: fmt(state.products.length) },
+    { label: 'Inventory @ Cost', val: money(totalValue) },
+    { label: 'Inventory @ Retail', val: money(totalRetail) },
+    { label: 'Avg Margin', val: pct(avgMargin) },
+    { label: 'Units in Stock', val: fmt(state.products.reduce((s, p) => s + p.stock, 0)) },
+    { label: 'Units Sold', val: fmt(state.products.reduce((s, p) => s + p.sold, 0)) },
+  ]);
+
+  buildCategoryChips();
+  const list = filteredSortedProducts();
+
+  // Grid view
+  if (productView === 'grid') {
+    $('#productsGrid').hidden = false;
+    $('#productsListWrap').hidden = true;
+    $('#productsGrid').innerHTML = list.length ? list.map(p => productCardHTML(p)).join('') : emptyState('No products match your filters.');
+  } else {
+    $('#productsGrid').hidden = true;
+    $('#productsListWrap').hidden = false;
+    $('#productsBody').innerHTML = list.map(p => {
+      const margin = p.price ? ((p.price - p.cost) / p.price * 100) : 0;
+      return `<tr>
+        <td>
+          <div class="product-cell">
+            <div class="prod-thumb" style="background:${categoryColor(p.category)}">${productInitials(p.name)}</div>
+            <div><strong>${escape(p.name)}</strong><div class="meta"><code>${escape(p.sku)}</code></div></div>
+          </div>
+        </td>
+        <td><span class="cat-pill" style="background:${categoryColor(p.category)}22;color:${categoryColor(p.category)}">${escape(p.category)}</span></td>
+        <td>${escape(p.supplier)}</td>
+        <td class="num">${money(p.cost, 2)}</td>
+        <td class="num">${money(p.price, 2)}</td>
+        <td class="num">${marginBadge(margin)}</td>
+        <td class="num">${stockBadge(p)}</td>
+        <td class="num">${p.sold}</td>
+        <td class="actions-cell">
+          <button class="icon-btn" data-edit-product="${p.id}" title="Edit" data-icon-inline="edit"></button>
+          <button class="icon-btn" data-dup-product="${p.id}" title="Duplicate" data-icon-inline="copy"></button>
+          <button class="icon-btn danger" data-del-product="${p.id}" title="Delete" data-icon-inline="trash"></button>
+        </td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="9">${emptyState('No products match your filters.')}</td></tr>`;
+  }
+
+  // inject inline icons on action buttons
+  document.querySelectorAll('[data-icon-inline]').forEach(el => {
+    if (el.dataset.iconInjected) return;
+    el.innerHTML = icon(el.dataset.iconInline, 14);
+    el.dataset.iconInjected = '1';
+  });
+
+  // Charts
+  drawChart('chart_prodMargin', 'bar', {
+    labels: state.products.map(p => p.sku),
+    datasets: [{
+      label: 'Margin %',
+      data: state.products.map(p => p.price ? ((p.price - p.cost) / p.price * 100) : 0),
+      backgroundColor: state.products.map(p => {
+        const m = p.price ? ((p.price - p.cost) / p.price * 100) : 0;
+        return m > 70 ? '#00b894' : m > 40 ? '#0984e3' : '#e17055';
+      })
+    }]
+  });
+  const catMap = {};
+  state.products.forEach(p => { catMap[p.category] = (catMap[p.category] || 0) + p.sold * p.price; });
+  drawChart('chart_prodCat', 'doughnut', {
+    labels: Object.keys(catMap),
+    datasets: [{ data: Object.values(catMap), backgroundColor: Object.keys(catMap).map(categoryColor) }]
+  });
+
+  injectIcons();
+}
+
+function productCardHTML(p) {
+  const margin = p.price ? ((p.price - p.cost) / p.price * 100) : 0;
+  const revenue = p.sold * p.price;
+  const color = categoryColor(p.category);
+  const stockLevel = p.stock === 0 ? 'bad' : p.stock <= p.reorder ? 'warn' : 'ok';
+  const stockPct = Math.min(100, (p.stock / Math.max(p.reorder * 3, 10)) * 100);
+  return `
+    <div class="product-card" data-pid="${p.id}">
+      <div class="pc-header" style="background:linear-gradient(135deg,${color},${color}cc)">
+        <span class="pc-initials">${productInitials(p.name)}</span>
+        <span class="cat-pill" style="background:rgba(255,255,255,0.25);color:#fff">${escape(p.category)}</span>
+      </div>
+      <div class="pc-body">
+        <div class="pc-name" title="${escape(p.name)}">${escape(p.name)}</div>
+        <div class="pc-sku"><code>${escape(p.sku)}</code></div>
+        <div class="pc-prices">
+          <div><span>Cost</span><strong>${money(p.cost, 2)}</strong></div>
+          <div><span>Price</span><strong class="accent">${money(p.price, 2)}</strong></div>
+          <div><span>Margin</span>${marginBadge(margin)}</div>
+        </div>
+        <div class="pc-stock">
+          <div class="pc-stock-label"><span>Stock</span><strong>${p.stock} ${p.stock === 0 ? '· OUT' : p.stock <= p.reorder ? '· LOW' : ''}</strong></div>
+          <div class="pc-stock-bar"><div class="pc-stock-fill ${stockLevel}" style="width:${stockPct}%"></div></div>
+        </div>
+        <div class="pc-meta">
+          <span>${p.sold} sold</span>
+          <span>${money(revenue)}</span>
+        </div>
+      </div>
+      <div class="pc-actions">
+        <button class="icon-btn" data-stock-adj="${p.id}" data-delta="-1" title="Decrease stock" data-icon-inline="minus"></button>
+        <span class="pc-stock-num">${p.stock}</span>
+        <button class="icon-btn" data-stock-adj="${p.id}" data-delta="1" title="Increase stock" data-icon-inline="plus"></button>
+        <div class="pc-actions-right">
+          <button class="icon-btn" data-edit-product="${p.id}" title="Edit" data-icon-inline="edit"></button>
+          <button class="icon-btn" data-dup-product="${p.id}" title="Duplicate" data-icon-inline="copy"></button>
+          <button class="icon-btn danger" data-del-product="${p.id}" title="Delete" data-icon-inline="trash"></button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function marginBadge(m) {
+  const cls = m >= 60 ? 'ok' : m >= 35 ? 'info' : m >= 15 ? 'warn' : 'bad';
+  return `<span class="margin-badge ${cls}">${pct(m, 0)}</span>`;
+}
+function stockBadge(p) {
+  const cls = p.stock === 0 ? 'bad' : p.stock <= p.reorder ? 'warn' : 'ok';
+  return `<span class="status-tag ${cls}">${p.stock}</span>`;
+}
+function emptyState(msg) {
+  return `<div class="empty-state">${icon('search', 32)}<p>${escape(msg)}</p></div>`;
+}
+
+// ===== PRICING (enhanced) =====
+function renderPricing() {
+  // Main calculator
+  bindRange('pc_cost', v => '$' + Number(v).toFixed(2), updatePricing);
+  bindRange('pc_margin', v => v + '%', updatePricing);
+  bindRange('pc_proc', v => v + '%', updatePricing);
+  bindRange('pc_ship', v => '$' + Number(v).toFixed(2), updatePricing);
+  bindRange('pc_vol', v => v, updatePricing);
+  // Discount calc
+  bindRange('dc_price', v => '$' + Number(v).toFixed(2), updateDiscount);
+  bindRange('dc_cost', v => '$' + Number(v).toFixed(2), updateDiscount);
+  bindRange('dc_pct', v => v + '%', updateDiscount);
+  bindRange('dc_lift', v => v + '%', updateDiscount);
+  // Psych
+  bindRange('psy_price', v => '$' + Number(v).toFixed(2), updatePsych);
+
+  // Sub-tab switching
+  $$('.sub-tab').forEach(b => {
+    b.onclick = () => {
+      $$('.sub-tab').forEach(x => x.classList.toggle('active', x === b));
+      $$('.ptab-content').forEach(x => x.classList.toggle('active', x.id === 'ptab-' + b.dataset.ptab));
+    };
+  });
+
+  updatePricing();
+  updateDiscount();
+  updatePsych();
+
+  // Bundle
+  $('#bundleBuilder').innerHTML = `
+    <table class="data-table"><thead><tr><th>Bundle</th><th class="num">Individual</th><th class="num">Bundle (-15%)</th><th class="num">Savings</th></tr></thead>
+    <tbody>
+      ${state.products.slice(0, 5).map((p, i, a) => {
+        if (i === 0) return '';
+        const combo = a.slice(0, i + 1);
+        const indiv = combo.reduce((s, x) => s + x.price, 0);
+        const bundle = indiv * 0.85;
+        return `<tr><td>${combo.map(x => escape(x.name)).join(' + ')}</td><td class="num">${money(indiv, 2)}</td><td class="num" style="color:var(--green);font-weight:700">${money(bundle, 2)}</td><td class="num">${money(indiv - bundle, 2)}</td></tr>`;
+      }).join('')}
+    </tbody></table>
+  `;
+
+  injectIcons();
+}
+
+function updatePricing() {
+  const cost = +$('#pc_cost').value;
+  const margin = +$('#pc_margin').value;
+  const proc = +$('#pc_proc').value;
+  const ship = +$('#pc_ship').value;
+  const vol = +$('#pc_vol').value;
+  const basePrice = margin < 100 ? cost / (1 - margin / 100) : cost * 10;
+  const price = (basePrice + ship) / (1 - proc / 100);
+  const gross = price - cost - ship - price * proc / 100;
+  const markup = cost ? ((price - cost) / cost * 100) : 0;
+  const fixedMonthly = state.fixedCosts.reduce((s, f) => s + f.amount, 0);
+  const breakeven = gross > 0 ? Math.ceil(fixedMonthly / gross) : '—';
+  const monthlyProfit = gross * vol - fixedMonthly;
+  const effective = price ? (gross / price * 100) : 0;
+
+  $('#pc_price').textContent = money(price, 2);
+  $('#pc_gross').textContent = money(gross, 2);
+  $('#pc_markup').textContent = pct(markup, 0);
+  $('#pc_monthly').textContent = money(monthlyProfit);
+  $('#pc_be').textContent = breakeven === '—' ? '—' : fmt(breakeven) + ' / mo';
+  $('#pc_effective').textContent = pct(effective, 1);
+
+  // Strategy comparison
+  const strategies = {
+    'Penetration (30%)': cost * 1.3,
+    'Cost-Plus (50%)': cost * 1.5,
+    'Competitive (2x)': cost * 2.0,
+    'Target Margin': price,
+    'Premium (3.5x)': cost * 3.5,
+    'Luxury (5x)': cost * 5.0,
+  };
+  drawChart('chart_pricingStrat', 'bar', {
+    labels: Object.keys(strategies),
+    datasets: [{ label: 'Price', data: Object.values(strategies), backgroundColor: ['#95a5a6', '#74b9ff', '#0984e3', '#00b894', '#6c5ce7', '#fdcb6e'] }]
+  });
+
+  $('#strategyTable').innerHTML = `
+    <thead><tr><th>Strategy</th><th class="num">Price</th><th class="num">Margin</th><th class="num">Profit/unit</th><th>Use When</th></tr></thead>
+    <tbody>
+      ${Object.entries(strategies).map(([name, p]) => `
+        <tr><td><strong>${name}</strong></td><td class="num">${money(p, 2)}</td>
+        <td class="num">${pct(p > 0 ? (p - cost) / p * 100 : 0, 0)}</td>
+        <td class="num">${money(p - cost, 2)}</td>
+        <td style="font-size:12px;color:var(--text-muted)">${strategyUseCase(name)}</td></tr>
+      `).join('')}
+    </tbody>`;
+
+  // Tips
+  const tips = [];
+  if (margin < 30) tips.push({ icon: 'alert', text: 'Your margin is below 30% — hard to absorb costs and promotions.' });
+  if (margin > 70) tips.push({ icon: 'check', text: 'Healthy margin — you have room for discounts and marketing.' });
+  if (proc > 3) tips.push({ icon: 'info', text: 'Processing fees >3% eat margin. Consider surcharges or discount for cash.' });
+  if (breakeven !== '—' && +breakeven > vol) tips.push({ icon: 'alert', text: `You need ${breakeven} units/mo to break even — currently planning ${vol}.` });
+  if (monthlyProfit > 0) tips.push({ icon: 'check', text: `At ${vol} units/mo, you're making ${money(monthlyProfit)} profit.` });
+  if (markup < 100) tips.push({ icon: 'info', text: 'Retail rule of thumb: keystone markup is 100% (price = 2x cost).' });
+  $('#pricingTips').innerHTML = tips.map(t => `<div class="tip"><span data-icon="${t.icon}"></span><span>${t.text}</span></div>`).join('');
+  injectIcons();
+}
+
+function strategyUseCase(name) {
+  const map = {
+    'Penetration (30%)': 'Enter market, grab share',
+    'Cost-Plus (50%)': 'Simple, safe baseline',
+    'Competitive (2x)': 'Match market standard',
+    'Target Margin': 'Hit your margin goal',
+    'Premium (3.5x)': 'Brand positioning',
+    'Luxury (5x)': 'High-end, exclusive'
+  };
+  return map[name] || '';
+}
+
+function updateDiscount() {
+  const price = +$('#dc_price').value;
+  const cost = +$('#dc_cost').value;
+  const pctDisc = +$('#dc_pct').value;
+  const lift = +$('#dc_lift').value;
+  const newPrice = price * (1 - pctDisc / 100);
+  const origMargin = price > 0 ? (price - cost) / price * 100 : 0;
+  const newMargin = newPrice > 0 ? (newPrice - cost) / newPrice * 100 : 0;
+  const lostPerUnit = price - newPrice;
+  const origProfit = price - cost;
+  const newProfit = newPrice - cost;
+  const beLift = origProfit > 0 ? ((origProfit / Math.max(newProfit, 0.01)) - 1) * 100 : 0;
+
+  $('#dc_new').textContent = money(newPrice, 2);
+  $('#dc_margin').textContent = pct(newMargin, 0) + ' (was ' + pct(origMargin, 0) + ')';
+  $('#dc_lost').textContent = money(lostPerUnit, 2);
+  $('#dc_beLift').textContent = newProfit > 0 ? pct(beLift, 0) : 'impossible';
+
+  // Curve: profit at various discounts
+  const discounts = [0, 5, 10, 15, 20, 25, 30, 40, 50];
+  drawChart('chart_discount', 'line', {
+    labels: discounts.map(d => d + '%'),
+    datasets: [
+      {
+        label: 'Profit/unit',
+        data: discounts.map(d => (price * (1 - d / 100)) - cost),
+        borderColor: '#0984e3', backgroundColor: 'rgba(9,132,227,0.1)', fill: true, tension: 0.3
+      },
+      {
+        label: 'Profit w/ volume lift',
+        data: discounts.map(d => ((price * (1 - d / 100)) - cost) * (1 + lift / 100)),
+        borderColor: '#00b894', backgroundColor: 'rgba(0,184,148,0.1)', fill: true, tension: 0.3, borderDash: [4, 4]
+      }
+    ]
+  });
+}
+
+function updatePsych() {
+  const p = +$('#psy_price').value;
+  const variants = [
+    { name: 'Charm (.99)', price: Math.floor(p) + 0.99, tip: 'Left-digit effect — $9.99 feels much less than $10' },
+    { name: 'Prestige (round)', price: Math.round(p), tip: 'Round numbers feel premium and trustworthy' },
+    { name: 'Even (.00)', price: Math.floor(p) + 0.00, tip: 'Signals quality and simplicity' },
+    { name: 'Odd (.95)', price: Math.floor(p) + 0.95, tip: 'Slightly less aggressive than .99' },
+    { name: 'Anchor (+20%)', price: (p * 1.2).toFixed(2) * 1, tip: 'Show this as "original price" to make the sale price feel like a deal' },
+    { name: 'Tiered Mid', price: (p * 0.85).toFixed(2) * 1, tip: 'Middle option of 3 typically wins — price accordingly' },
+    { name: 'Subscription (/mo)', price: (p / 12).toFixed(2) * 1, tip: 'Breaking into monthly cost lowers sticker shock' },
+    { name: 'Budget (-25%)', price: (p * 0.75).toFixed(2) * 1, tip: 'Entry-level variant to capture price-sensitive buyers' },
+  ];
+  $('#psyGrid').innerHTML = variants.map(v => `
+    <div class="psy-card">
+      <div class="psy-name">${v.name}</div>
+      <div class="psy-price">${money(v.price, 2)}</div>
+      <div class="psy-tip">${v.tip}</div>
+    </div>
+  `).join('');
+}
+
+// ===== SUPPLY CHAIN (cards) =====
+function renderSupply() {
+  const avgLead = state.suppliers.length ? state.suppliers.reduce((s, x) => s + x.leadDays, 0) / state.suppliers.length : 0;
+  const avgRel = state.suppliers.length ? state.suppliers.reduce((s, x) => s + x.reliability, 0) / state.suppliers.length : 0;
+  const openPO = state.purchaseOrders.filter(p => p.status !== 'Received').length;
+  const openPOValue = state.purchaseOrders.filter(p => p.status !== 'Received').reduce((s, p) => s + p.amount, 0);
+  $('#kpiSupply').innerHTML = kpiBlock([
+    { label: 'Suppliers', val: fmt(state.suppliers.length) },
+    { label: 'Avg Lead Time', val: avgLead.toFixed(1) + ' d' },
+    { label: 'Avg Reliability', val: pct(avgRel, 0) },
+    { label: 'Open POs', val: fmt(openPO) },
+    { label: 'Open PO Value', val: money(openPOValue) },
+  ]);
+
+  $('#suppliersGrid').innerHTML = state.suppliers.map(s => supplierCardHTML(s)).join('') || emptyState('No suppliers yet. Click "Add Supplier".');
+
+  $('#posBody').innerHTML = state.purchaseOrders.map(p => `
+    <tr>
+      <td><code>${escape(p.id)}</code></td>
+      <td>${escape(p.supplier)}</td>
+      <td class="num">${money(p.amount)}</td>
+      <td>${p.eta}</td>
+      <td><span class="status-tag ${p.status === 'In Transit' ? 'info' : p.status === 'Pending' ? 'warn' : 'ok'}">${p.status}</span></td>
+      <td><button class="icon-btn" data-receive-po="${p.id}" title="Mark received" data-icon-inline="check"></button><button class="icon-btn danger" data-del-po="${p.id}" title="Delete" data-icon-inline="trash"></button></td>
+    </tr>`).join('') || `<tr><td colspan="6">${emptyState('No purchase orders yet.')}</td></tr>`;
+
+  // Scorecard
+  $('#scorecardBody').innerHTML = state.suppliers.map(s => {
+    const pos = state.purchaseOrders.filter(p => p.supplier === s.name);
+    const spend = pos.reduce((sum, p) => sum + p.amount, 0);
+    const open = pos.filter(p => p.status !== 'Received').length;
+    const stars = Math.round(s.reliability / 20);
+    return `<tr>
+      <td><strong>${escape(s.name)}</strong><div class="meta">${escape(s.category)}</div></td>
+      <td class="num">${s.reliability}%</td>
+      <td class="num">${s.leadDays} d</td>
+      <td class="num">${s.moq}</td>
+      <td class="num">${money(spend)}</td>
+      <td class="num">${open}</td>
+      <td>${renderStars(stars)}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="7">${emptyState('Add suppliers to see scorecards.')}</td></tr>`;
+
+  drawChart('chart_leadTime', 'bar', {
+    labels: state.suppliers.map(s => s.name),
+    datasets: [{ label: 'Lead Time (days)', data: state.suppliers.map(s => s.leadDays), backgroundColor: '#6c5ce7' }]
+  });
+
+  document.querySelectorAll('[data-icon-inline]').forEach(el => {
+    if (el.dataset.iconInjected) return;
+    el.innerHTML = icon(el.dataset.iconInline, 14);
+    el.dataset.iconInjected = '1';
+  });
+  injectIcons();
+}
+
+function supplierCardHTML(s) {
+  const stars = Math.round(s.reliability / 20);
+  const pos = state.purchaseOrders.filter(p => p.supplier === s.name);
+  const open = pos.filter(p => p.status !== 'Received').length;
+  const spend = pos.reduce((sum, p) => sum + p.amount, 0);
+  const initials = s.name.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  const hue = [...s.name].reduce((h, c) => (h + c.charCodeAt(0)) % 360, 0);
+  return `
+    <div class="supplier-card">
+      <div class="sc-header">
+        <div class="sc-avatar" style="background:hsl(${hue},65%,55%)">${initials}</div>
+        <div>
+          <div class="sc-name">${escape(s.name)}</div>
+          <div class="sc-cat">${escape(s.category)}</div>
+        </div>
+        <button class="icon-btn" data-del-supplier="${s.id}" title="Remove" data-icon-inline="trash"></button>
+      </div>
+      <div class="sc-stats">
+        <div><span>Lead</span><strong>${s.leadDays}d</strong></div>
+        <div><span>MOQ</span><strong>${s.moq}</strong></div>
+        <div><span>Rel.</span><strong>${s.reliability}%</strong></div>
+        <div><span>Spend</span><strong>${money(spend)}</strong></div>
+      </div>
+      <div class="sc-stars">${renderStars(stars)} <span class="sc-open">${open} open PO${open !== 1 ? 's' : ''}</span></div>
+      ${s.email || s.phone ? `<div class="sc-contact">${s.email ? `<span>${icon('mail', 12)} ${escape(s.email)}</span>` : ''}${s.phone ? `<span>${icon('phone', 12)} ${escape(s.phone)}</span>` : ''}</div>` : ''}
+      <div class="sc-actions">
+        <button class="btn btn-ghost small" data-new-po-supplier="${escape(s.name)}"><span data-icon="plus"></span> Create PO</button>
+        <button class="btn btn-ghost small" data-edit-supplier="${s.id}"><span data-icon="edit"></span> Edit</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderStars(n) {
+  let html = '';
+  for (let i = 0; i < 5; i++) {
+    html += `<svg width="14" height="14" viewBox="0 0 24 24" fill="${i < n ? '#fdcb6e' : 'none'}" stroke="${i < n ? '#fdcb6e' : '#ccc'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:1px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+  }
+  return `<span class="stars">${html}</span>`;
+}
+
+// ===== EXTRA MODALS =====
+function openSupplierModal(id) {
+  const s = id ? state.suppliers.find(x => x.id === id) : { id: uid('S'), name: '', category: '', leadDays: 7, moq: 50, reliability: 90, email: '', phone: '', notes: '' };
+  openModal(id ? 'Edit Supplier' : 'Add Supplier', `
+    <div class="form-group"><label>Name *</label><input id="m_sname" value="${escape(s.name)}"></div>
+    <div class="form-group"><label>Category</label><input id="m_scat" value="${escape(s.category || '')}"></div>
+    <div class="grid g2">
+      <div class="form-group"><label>Email</label><input id="m_semail" value="${escape(s.email || '')}"></div>
+      <div class="form-group"><label>Phone</label><input id="m_sphone" value="${escape(s.phone || '')}"></div>
+    </div>
+    <div class="grid g3">
+      <div class="form-group"><label>Lead Time (d)</label><input id="m_lead" type="number" value="${s.leadDays}"></div>
+      <div class="form-group"><label>MOQ</label><input id="m_moq" type="number" value="${s.moq}"></div>
+      <div class="form-group"><label>Reliability %</label><input id="m_rel" type="number" value="${s.reliability}"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="m_snotes" rows="2">${escape(s.notes || '')}</textarea></div>
+  `, () => {
+    const name = $('#m_sname').value.trim();
+    if (!name) { toast('Name required'); return; }
+    const data = {
+      id: s.id, name,
+      category: $('#m_scat').value.trim() || 'General',
+      email: $('#m_semail').value.trim(),
+      phone: $('#m_sphone').value.trim(),
+      leadDays: +$('#m_lead').value || 7,
+      moq: +$('#m_moq').value || 1,
+      reliability: Math.min(100, Math.max(0, +$('#m_rel').value || 90)),
+      notes: $('#m_snotes').value.trim(),
+    };
+    const idx = state.suppliers.findIndex(x => x.id === s.id);
+    if (idx >= 0) state.suppliers[idx] = data; else state.suppliers.push(data);
+    persist(); renderSupply();
+    toast(id ? 'Supplier updated' : 'Supplier added');
+  });
+}
+
+function openPOModal(supplierName = '') {
+  openModal('New Purchase Order', `
+    <div class="form-group"><label>Supplier</label>
+      <select id="m_psup">${state.suppliers.map(s => `<option ${s.name === supplierName ? 'selected' : ''}>${escape(s.name)}</option>`).join('')}</select>
+    </div>
+    <div class="grid g2">
+      <div class="form-group"><label>Amount ($)</label><input id="m_pamt" type="number" step="0.01" value="500"></div>
+      <div class="form-group"><label>ETA</label><input id="m_peta" type="date" value="${new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10)}"></div>
+    </div>
+    <div class="form-group"><label>Status</label>
+      <select id="m_pstat"><option>Pending</option><option>Confirmed</option><option>In Transit</option><option>Received</option></select>
+    </div>
+  `, () => {
+    const amt = +$('#m_pamt').value;
+    if (amt <= 0) { toast('Amount required'); return; }
+    state.purchaseOrders.push({
+      id: 'PO-' + String(state.purchaseOrders.length + 1).padStart(3, '0'),
+      supplier: $('#m_psup').value,
+      amount: amt,
+      eta: $('#m_peta').value,
+      status: $('#m_pstat').value
+    });
+    persist(); renderSupply();
+    toast('PO created');
+  });
+}
+
+function duplicateProduct(id) {
+  const p = state.products.find(x => x.id === id);
+  if (!p) return;
+  const copy = { ...p, id: uid('P'), sku: p.sku + '-COPY', name: p.name + ' (Copy)', sold: 0 };
+  state.products.push(copy);
+  persist(); renderProducts();
+  toast('Product duplicated');
+}
+
+function adjustStock(id, delta) {
+  const p = state.products.find(x => x.id === id);
+  if (!p) return;
+  p.stock = Math.max(0, p.stock + delta);
+  persist(); renderProducts();
+}
+
+// ===== EVENT EXTENSIONS =====
+function bindExtraEvents() {
+  // Product sort / filter / view
+  $('#productSort')?.addEventListener('change', e => { productFilter.sort = e.target.value; renderProducts(); });
+  $('#productStockFilter')?.addEventListener('change', e => { productFilter.stock = e.target.value; renderProducts(); });
+  $$('.vt-btn').forEach(b => b.onclick = () => {
+    productView = b.dataset.view;
+    $$('.vt-btn').forEach(x => x.classList.toggle('active', x === b));
+    renderProducts();
+  });
+
+  $('#addPOBtn')?.addEventListener('click', () => openPOModal());
+  $('#importProductsBtn')?.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = '.json,.csv';
+    input.onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        try {
+          const text = ev.target.result;
+          if (f.name.endsWith('.json')) {
+            const data = JSON.parse(text);
+            if (Array.isArray(data)) state.products.push(...data);
+          } else {
+            const lines = text.split('\n').filter(Boolean);
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            lines.slice(1).forEach(line => {
+              const vals = line.split(',');
+              const p = { id: uid('P'), sku: '', name: '', category: 'Imported', supplier: 'Unknown', cost: 0, price: 0, stock: 0, reorder: 5, sold: 0 };
+              headers.forEach((h, i) => {
+                if (h in p) p[h] = isNaN(vals[i]) ? vals[i].trim() : +vals[i];
+              });
+              state.products.push(p);
+            });
+          }
+          persist(); renderProducts();
+          toast('Products imported');
+        } catch (err) { toast('Import failed'); }
+      };
+      r.readAsText(f);
+    };
+    input.click();
+  });
+
+  // Global delegation for new actions
+  document.body.addEventListener('click', e => {
+    const t = e.target.closest('[data-stock-adj], [data-dup-product], [data-edit-supplier], [data-new-po-supplier], [data-receive-po], [data-del-po]');
+    if (!t) return;
+    if (t.dataset.stockAdj) adjustStock(t.dataset.stockAdj, +t.dataset.delta);
+    if (t.dataset.dupProduct) duplicateProduct(t.dataset.dupProduct);
+    if (t.dataset.editSupplier) openSupplierModal(t.dataset.editSupplier);
+    if (t.dataset.newPoSupplier) openPOModal(t.dataset.newPoSupplier);
+    if (t.dataset.receivePo) {
+      const po = state.purchaseOrders.find(p => p.id === t.dataset.receivePo);
+      if (po) { po.status = 'Received'; persist(); renderSupply(); toast('PO received'); }
+    }
+    if (t.dataset.delPo) {
+      state.purchaseOrders = state.purchaseOrders.filter(p => p.id !== t.dataset.delPo);
+      persist(); renderSupply(); toast('PO deleted');
+    }
+  });
+}
+
 // ===== INIT =====
 function init() {
   hydrate();
   bindEvents();
+  bindExtraEvents();
   if (state.settings.accent) applyAccent(state.settings.accent);
   if (state.settings.theme) applyTheme(state.settings.theme);
+  injectIcons();
   renderTab('home');
 }
 

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Profitly — Universal Business Operating System</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="icons.js"></script>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -21,39 +22,39 @@
     </div>
   </div>
 
-  <div class="tab-nav">
+  <div class="tab-nav" id="sidebarNav">
     <div class="nav-section">Overview</div>
-    <button class="tab-btn active" data-tab="home"><span class="icon">🏠</span> Home</button>
-    <button class="tab-btn" data-tab="dashboard"><span class="icon">📊</span> Dashboard</button>
+    <button class="tab-btn active" data-tab="home" data-icon="home">Home</button>
+    <button class="tab-btn" data-tab="dashboard" data-icon="dashboard">Dashboard</button>
 
     <div class="nav-section">Operations</div>
-    <button class="tab-btn" data-tab="products"><span class="icon">📦</span> Products</button>
-    <button class="tab-btn" data-tab="inventory"><span class="icon">🗂️</span> Inventory</button>
-    <button class="tab-btn" data-tab="supply"><span class="icon">🚚</span> Supply Chain</button>
-    <button class="tab-btn" data-tab="orders"><span class="icon">🧾</span> Orders & Sales</button>
+    <button class="tab-btn" data-tab="products" data-icon="products">Products</button>
+    <button class="tab-btn" data-tab="inventory" data-icon="inventory">Inventory</button>
+    <button class="tab-btn" data-tab="supply" data-icon="supply">Supply Chain</button>
+    <button class="tab-btn" data-tab="orders" data-icon="orders">Orders & Sales</button>
 
     <div class="nav-section">Finance</div>
-    <button class="tab-btn" data-tab="costs"><span class="icon">💳</span> Costs</button>
-    <button class="tab-btn" data-tab="pricing"><span class="icon">🏷️</span> Pricing</button>
-    <button class="tab-btn" data-tab="profitability"><span class="icon">💰</span> Profitability</button>
-    <button class="tab-btn" data-tab="cashflow"><span class="icon">💵</span> Cash Flow</button>
+    <button class="tab-btn" data-tab="costs" data-icon="costs">Costs</button>
+    <button class="tab-btn" data-tab="pricing" data-icon="pricing">Pricing</button>
+    <button class="tab-btn" data-tab="profitability" data-icon="profitability">Profitability</button>
+    <button class="tab-btn" data-tab="cashflow" data-icon="cashflow">Cash Flow</button>
 
     <div class="nav-section">Planning</div>
-    <button class="tab-btn" data-tab="forecast"><span class="icon">📈</span> Forecast</button>
-    <button class="tab-btn" data-tab="scenarios"><span class="icon">🎯</span> Scenarios</button>
-    <button class="tab-btn" data-tab="reports"><span class="icon">📑</span> Reports</button>
+    <button class="tab-btn" data-tab="forecast" data-icon="forecast">Forecast</button>
+    <button class="tab-btn" data-tab="scenarios" data-icon="scenarios">Scenarios</button>
+    <button class="tab-btn" data-tab="reports" data-icon="reports">Reports</button>
 
     <div class="nav-section">System</div>
-    <button class="tab-btn" data-tab="settings"><span class="icon">⚙️</span> Settings</button>
+    <button class="tab-btn" data-tab="settings" data-icon="settings">Settings</button>
   </div>
 
   <div class="sidebar-footer">
-    <button class="reset-btn" id="resetBtn">↻ Reset Demo Data</button>
+    <button class="reset-btn" id="resetBtn"><span data-icon="refresh"></span> Reset Demo Data</button>
     <p>v1.0 · Built for operators</p>
   </div>
 </nav>
 
-<button class="mobile-toggle" id="mobileToggle">☰</button>
+<button class="mobile-toggle" id="mobileToggle" data-icon="menu"></button>
 
 <!-- ===== MAIN CONTENT ===== -->
 <main class="main">
@@ -99,18 +100,18 @@
     <h2 class="section-title">Everything a business needs, in one place</h2>
     <p class="section-sub">Built to scale from a side hustle to a multi-location operation.</p>
     <div class="feature-grid">
-      <div class="feature"><div class="feature-icon">📦</div><h3>Product Catalog</h3><p>Unlimited SKUs with cost, price, margin, supplier, category, and lifecycle tracking.</p></div>
-      <div class="feature"><div class="feature-icon">🗂️</div><h3>Smart Inventory</h3><p>Real-time stock levels, low-stock alerts, reorder points, and automatic valuation.</p></div>
-      <div class="feature"><div class="feature-icon">🚚</div><h3>Supply Chain</h3><p>Manage suppliers, lead times, purchase orders, and landed costs in one view.</p></div>
-      <div class="feature"><div class="feature-icon">💰</div><h3>Profitability</h3><p>Live P&L, contribution margin by SKU, break-even, and unit economics.</p></div>
-      <div class="feature"><div class="feature-icon">🏷️</div><h3>Pricing Engine</h3><p>Test markup rules, bundle pricing, and margin-target calculators instantly.</p></div>
-      <div class="feature"><div class="feature-icon">📈</div><h3>Forecasting</h3><p>Revenue projections with seasonality, growth curves, and customer traffic models.</p></div>
-      <div class="feature"><div class="feature-icon">🎯</div><h3>Scenario Planning</h3><p>Best/base/worst case analysis with sensitivity tables on any variable.</p></div>
-      <div class="feature"><div class="feature-icon">💵</div><h3>Cash Flow</h3><p>Month-by-month cash burn, runway, and working capital tracking.</p></div>
-      <div class="feature"><div class="feature-icon">🧾</div><h3>Orders & Sales</h3><p>Record orders, channels, customers, and daily sales in one lightweight ledger.</p></div>
-      <div class="feature"><div class="feature-icon">💳</div><h3>Cost Control</h3><p>Fixed vs variable, recurring vs one-time — categorized and visualized.</p></div>
-      <div class="feature"><div class="feature-icon">📑</div><h3>Reports</h3><p>Auto-generated P&L, balance summaries, and shareable investor snapshots.</p></div>
-      <div class="feature"><div class="feature-icon">⚙️</div><h3>Customizable</h3><p>Works for thrift stores, restaurants, SaaS, DTC brands, services — anything.</p></div>
+      <div class="feature"><div class="feature-icon" data-icon="products"></div><h3>Product Catalog</h3><p>Unlimited SKUs with cost, price, margin, supplier, category, and lifecycle tracking.</p></div>
+      <div class="feature"><div class="feature-icon" data-icon="inventory"></div><h3>Smart Inventory</h3><p>Real-time stock levels, low-stock alerts, reorder points, and automatic valuation.</p></div>
+      <div class="feature"><div class="feature-icon" data-icon="truck"></div><h3>Supply Chain</h3><p>Manage suppliers, lead times, purchase orders, and landed costs in one view.</p></div>
+      <div class="feature"><div class="feature-icon" data-icon="dollar"></div><h3>Profitability</h3><p>Live P&L, contribution margin by SKU, break-even, and unit economics.</p></div>
+      <div class="feature"><div class="feature-icon" data-icon="tag"></div><h3>Pricing Engine</h3><p>Test markup rules, bundle pricing, and margin-target calculators instantly.</p></div>
+      <div class="feature"><div class="feature-icon" data-icon="trendingUp"></div><h3>Forecasting</h3><p>Revenue projections with seasonality, growth curves, and customer traffic models.</p></div>
+      <div class="feature"><div class="feature-icon" data-icon="target"></div><h3>Scenario Planning</h3><p>Best/base/worst case analysis with sensitivity tables on any variable.</p></div>
+      <div class="feature"><div class="feature-icon" data-icon="cashflow"></div><h3>Cash Flow</h3><p>Month-by-month cash burn, runway, and working capital tracking.</p></div>
+      <div class="feature"><div class="feature-icon" data-icon="shoppingBag"></div><h3>Orders & Sales</h3><p>Record orders, channels, customers, and daily sales in one lightweight ledger.</p></div>
+      <div class="feature"><div class="feature-icon" data-icon="costs"></div><h3>Cost Control</h3><p>Fixed vs variable, recurring vs one-time — categorized and visualized.</p></div>
+      <div class="feature"><div class="feature-icon" data-icon="reports"></div><h3>Reports</h3><p>Auto-generated P&L, balance summaries, and shareable investor snapshots.</p></div>
+      <div class="feature"><div class="feature-icon" data-icon="sparkles"></div><h3>Customizable</h3><p>Works for thrift stores, restaurants, SaaS, DTC brands, services — anything.</p></div>
     </div>
   </section>
 
@@ -127,12 +128,12 @@
   <section class="section">
     <h2 class="section-title">Built for any business</h2>
     <div class="use-cases">
-      <div class="use-case"><span>👕</span><strong>Retail & Thrift</strong><p>Track SKUs, seasons, and walk-in traffic.</p></div>
-      <div class="use-case"><span>🍽️</span><strong>Restaurants & Cafés</strong><p>Menu pricing, food cost, daily covers.</p></div>
-      <div class="use-case"><span>💻</span><strong>SaaS & Digital</strong><p>MRR, CAC, LTV, churn, and runway.</p></div>
-      <div class="use-case"><span>🏭</span><strong>Manufacturing</strong><p>BOMs, landed cost, production yield.</p></div>
-      <div class="use-case"><span>🛒</span><strong>E-commerce</strong><p>Channel margins, ad spend ROAS, fulfillment.</p></div>
-      <div class="use-case"><span>🧰</span><strong>Services</strong><p>Utilization, billable rates, project margin.</p></div>
+      <div class="use-case"><span data-icon="shoppingBag"></span><strong>Retail & Thrift</strong><p>Track SKUs, seasons, and walk-in traffic.</p></div>
+      <div class="use-case"><span data-icon="heart"></span><strong>Restaurants & Cafés</strong><p>Menu pricing, food cost, daily covers.</p></div>
+      <div class="use-case"><span data-icon="activity"></span><strong>SaaS & Digital</strong><p>MRR, CAC, LTV, churn, and runway.</p></div>
+      <div class="use-case"><span data-icon="layers"></span><strong>Manufacturing</strong><p>BOMs, landed cost, production yield.</p></div>
+      <div class="use-case"><span data-icon="package"></span><strong>E-commerce</strong><p>Channel margins, ad spend ROAS, fulfillment.</p></div>
+      <div class="use-case"><span data-icon="briefcase"></span><strong>Services</strong><p>Utilization, billable rates, project margin.</p></div>
     </div>
   </section>
 
@@ -161,12 +162,12 @@
     </div>
     <div class="card" style="margin-top:18px"><h3>Quick Actions</h3>
       <div class="quick-actions">
-        <button class="qa" data-go="products">+ Add Product</button>
-        <button class="qa" data-go="orders">+ Record Sale</button>
-        <button class="qa" data-go="costs">+ Log Expense</button>
-        <button class="qa" data-go="supply">+ New Supplier</button>
-        <button class="qa" data-go="forecast">Run Forecast</button>
-        <button class="qa" data-go="reports">Export Report</button>
+        <button class="qa" data-go="products"><span data-icon="plus"></span> Add Product</button>
+        <button class="qa" data-go="orders"><span data-icon="shoppingBag"></span> Record Sale</button>
+        <button class="qa" data-go="costs"><span data-icon="costs"></span> Log Expense</button>
+        <button class="qa" data-go="supply"><span data-icon="truck"></span> New Supplier</button>
+        <button class="qa" data-go="forecast"><span data-icon="trendingUp"></span> Run Forecast</button>
+        <button class="qa" data-go="reports"><span data-icon="download"></span> Export Report</button>
       </div>
     </div>
   </div>
@@ -174,16 +175,51 @@
 
 <!-- ===== PRODUCTS ===== -->
 <div class="tab-content" id="tab-products">
-  <div class="page-header"><div><h2>Products</h2><p>Your complete SKU catalog with costs, pricing, and margins.</p></div>
-    <div class="header-actions"><input type="search" id="productSearch" placeholder="Search products..."><button class="btn btn-primary" id="addProductBtn">+ Add Product</button></div>
+  <div class="page-header">
+    <div><h2>Products</h2><p>Your complete SKU catalog with costs, pricing, and margins.</p></div>
+    <div class="header-actions">
+      <div class="search-wrap"><span data-icon="search"></span><input type="search" id="productSearch" placeholder="Search products, SKUs, categories..."></div>
+      <div class="view-toggle">
+        <button class="vt-btn active" data-view="grid" data-icon="grid" title="Grid view"></button>
+        <button class="vt-btn" data-view="list" data-icon="list" title="List view"></button>
+      </div>
+      <button class="btn btn-ghost" id="importProductsBtn"><span data-icon="upload"></span> Import</button>
+      <button class="btn btn-primary" id="addProductBtn"><span data-icon="plus"></span> Add Product</button>
+    </div>
   </div>
   <div class="page-body">
     <div class="kpi-row" id="kpiProducts"></div>
-    <div class="card">
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="filter-chips" id="categoryChips"></div>
+      <div class="filter-right">
+        <select id="productSort">
+          <option value="name">Sort: Name</option>
+          <option value="margin">Sort: Margin</option>
+          <option value="price">Sort: Price</option>
+          <option value="stock">Sort: Stock</option>
+          <option value="sold">Sort: Best Sellers</option>
+          <option value="revenue">Sort: Revenue</option>
+        </select>
+        <select id="productStockFilter">
+          <option value="all">Stock: All</option>
+          <option value="in">In Stock</option>
+          <option value="low">Low Stock</option>
+          <option value="out">Out of Stock</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Grid view -->
+    <div id="productsGrid" class="products-grid"></div>
+
+    <!-- List view -->
+    <div class="card" id="productsListWrap" hidden>
       <div class="table-wrap">
         <table class="data-table" id="productsTable">
           <thead><tr>
-            <th>SKU</th><th>Name</th><th>Category</th><th>Supplier</th>
+            <th>Product</th><th>Category</th><th>Supplier</th>
             <th class="num">Cost</th><th class="num">Price</th><th class="num">Margin</th>
             <th class="num">Stock</th><th class="num">Sold</th><th>Actions</th>
           </tr></thead>
@@ -191,6 +227,7 @@
         </table>
       </div>
     </div>
+
     <div class="grid g2" style="margin-top:18px">
       <div class="card"><h3>Margin Distribution</h3><div class="chart-box"><canvas id="chart_prodMargin"></canvas></div></div>
       <div class="card"><h3>Revenue by Category</h3><div class="chart-box"><canvas id="chart_prodCat"></canvas></div></div>
@@ -221,20 +258,34 @@
 
 <!-- ===== SUPPLY CHAIN ===== -->
 <div class="tab-content" id="tab-supply">
-  <div class="page-header"><div><h2>Supply Chain</h2><p>Suppliers, lead times, and purchase orders in one place.</p></div>
-    <div class="header-actions"><button class="btn btn-primary" id="addSupplierBtn">+ Add Supplier</button></div>
+  <div class="page-header">
+    <div><h2>Supply Chain</h2><p>Suppliers, lead times, and purchase orders in one place.</p></div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" id="addPOBtn"><span data-icon="plus"></span> New PO</button>
+      <button class="btn btn-primary" id="addSupplierBtn"><span data-icon="plus"></span> Add Supplier</button>
+    </div>
   </div>
   <div class="page-body">
     <div class="kpi-row" id="kpiSupply"></div>
-    <div class="grid g2">
-      <div class="card"><h3>Suppliers</h3>
-        <div class="table-wrap"><table class="data-table"><thead><tr><th>Name</th><th>Category</th><th class="num">Lead Time</th><th class="num">MOQ</th><th class="num">Reliability</th><th>Actions</th></tr></thead><tbody id="suppliersBody"></tbody></table></div>
+
+    <h3 class="section-heading"><span data-icon="users"></span> Suppliers</h3>
+    <div id="suppliersGrid" class="suppliers-grid"></div>
+
+    <div class="grid g2" style="margin-top:18px">
+      <div class="card">
+        <h3><span data-icon="orders"></span> Open Purchase Orders</h3>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>PO#</th><th>Supplier</th><th class="num">Amount</th><th>ETA</th><th>Status</th><th>Actions</th></tr></thead><tbody id="posBody"></tbody></table></div>
       </div>
-      <div class="card"><h3>Open Purchase Orders</h3>
-        <div class="table-wrap"><table class="data-table"><thead><tr><th>PO#</th><th>Supplier</th><th class="num">Amount</th><th>ETA</th><th>Status</th></tr></thead><tbody id="posBody"></tbody></table></div>
+      <div class="card">
+        <h3><span data-icon="clock"></span> Lead Time Comparison</h3>
+        <div class="chart-box"><canvas id="chart_leadTime"></canvas></div>
       </div>
     </div>
-    <div class="card" style="margin-top:18px"><h3>Lead Time Comparison</h3><div class="chart-box"><canvas id="chart_leadTime"></canvas></div></div>
+
+    <div class="card" style="margin-top:18px">
+      <h3><span data-icon="star"></span> Supplier Scorecard</h3>
+      <div class="table-wrap"><table class="data-table"><thead><tr><th>Supplier</th><th class="num">Reliability</th><th class="num">Lead Time</th><th class="num">MOQ</th><th class="num">Total Spend</th><th class="num">Open POs</th><th>Rating</th></tr></thead><tbody id="scorecardBody"></tbody></table></div>
+    </div>
   </div>
 </div>
 
@@ -277,32 +328,96 @@
 
 <!-- ===== PRICING ===== -->
 <div class="tab-content" id="tab-pricing">
-  <div class="page-header"><div><h2>Pricing Engine</h2><p>Calculate optimal prices, margins, and markups.</p></div></div>
+  <div class="page-header"><div><h2>Pricing Engine</h2><p>Calculate optimal prices, compare strategies, and optimize margins.</p></div></div>
   <div class="page-body">
-    <div class="grid g2">
-      <div class="card">
-        <h3>Margin Calculator</h3>
-        <div class="s-group"><label>Unit Cost <span id="v_pc_cost">$10.00</span></label><input type="range" id="pc_cost" min="0" max="500" step="0.5" value="10"></div>
-        <div class="s-group"><label>Target Margin % <span id="v_pc_margin">50%</span></label><input type="range" id="pc_margin" min="0" max="90" step="1" value="50"></div>
-        <div class="s-group"><label>Payment Processing % <span id="v_pc_proc">2.9%</span></label><input type="range" id="pc_proc" min="0" max="10" step="0.1" value="2.9"></div>
-        <div class="s-group"><label>Shipping / Fulfillment <span id="v_pc_ship">$0.00</span></label><input type="range" id="pc_ship" min="0" max="50" step="0.5" value="0"></div>
-        <div class="result-grid">
-          <div class="result"><span>Suggested Price</span><strong id="pc_price">$20.00</strong></div>
-          <div class="result"><span>Gross Profit</span><strong id="pc_gross">$10.00</strong></div>
-          <div class="result"><span>Markup %</span><strong id="pc_markup">100%</strong></div>
-          <div class="result"><span>Break-even Units/mo</span><strong id="pc_be">—</strong></div>
+
+    <!-- Tabs for pricing tools -->
+    <div class="sub-tabs">
+      <button class="sub-tab active" data-ptab="calc"><span data-icon="calculator"></span> Calculator</button>
+      <button class="sub-tab" data-ptab="compare"><span data-icon="barChart"></span> Compare</button>
+      <button class="sub-tab" data-ptab="discount"><span data-icon="tag"></span> Discount</button>
+      <button class="sub-tab" data-ptab="bundle"><span data-icon="layers"></span> Bundles</button>
+      <button class="sub-tab" data-ptab="psych"><span data-icon="zap"></span> Psychological</button>
+    </div>
+
+    <!-- Calculator tab -->
+    <div class="ptab-content active" id="ptab-calc">
+      <div class="grid g2">
+        <div class="card">
+          <h3><span data-icon="calculator"></span> Margin Calculator</h3>
+          <div class="s-group"><label>Unit Cost <span id="v_pc_cost">$10.00</span></label><input type="range" id="pc_cost" min="0" max="500" step="0.5" value="10"></div>
+          <div class="s-group"><label>Target Margin % <span id="v_pc_margin">50%</span></label><input type="range" id="pc_margin" min="0" max="90" step="1" value="50"></div>
+          <div class="s-group"><label>Payment Processing % <span id="v_pc_proc">2.9%</span></label><input type="range" id="pc_proc" min="0" max="10" step="0.1" value="2.9"></div>
+          <div class="s-group"><label>Shipping / Fulfillment <span id="v_pc_ship">$0.00</span></label><input type="range" id="pc_ship" min="0" max="50" step="0.5" value="0"></div>
+          <div class="s-group"><label>Expected Monthly Volume <span id="v_pc_vol">100</span></label><input type="range" id="pc_vol" min="1" max="2000" step="1" value="100"></div>
+          <div class="result-grid">
+            <div class="result"><span>Suggested Price</span><strong id="pc_price">$20.00</strong></div>
+            <div class="result"><span>Gross Profit/unit</span><strong id="pc_gross">$10.00</strong></div>
+            <div class="result"><span>Markup %</span><strong id="pc_markup">100%</strong></div>
+            <div class="result"><span>Monthly Profit</span><strong id="pc_monthly">$1,000</strong></div>
+            <div class="result"><span>Break-even Units/mo</span><strong id="pc_be">—</strong></div>
+            <div class="result"><span>Effective Margin</span><strong id="pc_effective">50%</strong></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3><span data-icon="info"></span> Pricing Tips</h3>
+          <div class="tips-list" id="pricingTips"></div>
         </div>
       </div>
+    </div>
+
+    <!-- Compare tab -->
+    <div class="ptab-content" id="ptab-compare">
       <div class="card">
         <h3>Pricing Strategy Comparison</h3>
+        <p class="note">See how different strategies stack up at your current cost.</p>
         <div class="chart-box tall"><canvas id="chart_pricingStrat"></canvas></div>
-        <p class="note">Compare cost-plus, competitive, premium, and penetration pricing at current cost.</p>
+        <table class="data-table" id="strategyTable" style="margin-top:16px"></table>
       </div>
     </div>
-    <div class="card" style="margin-top:18px"><h3>Bundle Builder</h3>
-      <p class="note">Combine products into bundles to lift average order value.</p>
-      <div id="bundleBuilder"></div>
+
+    <!-- Discount tab -->
+    <div class="ptab-content" id="ptab-discount">
+      <div class="grid g2">
+        <div class="card">
+          <h3><span data-icon="tag"></span> Discount Impact Calculator</h3>
+          <div class="s-group"><label>Original Price <span id="v_dc_price">$50.00</span></label><input type="range" id="dc_price" min="1" max="500" step="0.5" value="50"></div>
+          <div class="s-group"><label>Unit Cost <span id="v_dc_cost">$20.00</span></label><input type="range" id="dc_cost" min="0" max="500" step="0.5" value="20"></div>
+          <div class="s-group"><label>Discount % <span id="v_dc_pct">20%</span></label><input type="range" id="dc_pct" min="0" max="80" step="1" value="20"></div>
+          <div class="s-group"><label>Volume Lift from Discount <span id="v_dc_lift">50%</span></label><input type="range" id="dc_lift" min="0" max="500" step="5" value="50"></div>
+          <div class="result-grid">
+            <div class="result"><span>Discounted Price</span><strong id="dc_new">$40.00</strong></div>
+            <div class="result"><span>New Margin</span><strong id="dc_margin">50%</strong></div>
+            <div class="result"><span>Margin Lost/unit</span><strong id="dc_lost">$10</strong></div>
+            <div class="result"><span>Break-even Vol Lift</span><strong id="dc_beLift">50%</strong></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Discount Profit Curve</h3>
+          <div class="chart-box tall"><canvas id="chart_discount"></canvas></div>
+        </div>
+      </div>
     </div>
+
+    <!-- Bundle tab -->
+    <div class="ptab-content" id="ptab-bundle">
+      <div class="card">
+        <h3><span data-icon="layers"></span> Bundle Builder</h3>
+        <p class="note">Combine products into bundles to lift average order value.</p>
+        <div id="bundleBuilder"></div>
+      </div>
+    </div>
+
+    <!-- Psychological tab -->
+    <div class="ptab-content" id="ptab-psych">
+      <div class="card">
+        <h3><span data-icon="zap"></span> Psychological Pricing Helper</h3>
+        <p class="note">Round prices to proven psychological thresholds (.99, .95, charm pricing, anchor pricing).</p>
+        <div class="s-group"><label>Your Price <span id="v_psy_price">$25.00</span></label><input type="range" id="psy_price" min="1" max="1000" step="0.5" value="25"></div>
+        <div class="psy-grid" id="psyGrid"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -401,12 +516,12 @@
   <div class="page-header"><div><h2>Reports</h2><p>Export and share your business data.</p></div></div>
   <div class="page-body">
     <div class="report-grid">
-      <div class="report-card"><span class="report-icon">📊</span><h3>P&L Statement</h3><p>Full profit and loss for any period.</p><button class="btn btn-primary" data-report="pl">Generate</button></div>
-      <div class="report-card"><span class="report-icon">📦</span><h3>Inventory Report</h3><p>Stock on hand, valuation, and movement.</p><button class="btn btn-primary" data-report="inv">Generate</button></div>
-      <div class="report-card"><span class="report-icon">💼</span><h3>Investor Snapshot</h3><p>One-page overview of KPIs and growth.</p><button class="btn btn-primary" data-report="investor">Generate</button></div>
-      <div class="report-card"><span class="report-icon">🧾</span><h3>Expense Report</h3><p>All expenses grouped by category.</p><button class="btn btn-primary" data-report="expense">Generate</button></div>
-      <div class="report-card"><span class="report-icon">📈</span><h3>Sales Report</h3><p>Orders, channels, top products.</p><button class="btn btn-primary" data-report="sales">Generate</button></div>
-      <div class="report-card"><span class="report-icon">🎯</span><h3>Full Backup (JSON)</h3><p>Export every record for archive or import.</p><button class="btn btn-primary" data-report="backup">Download</button></div>
+      <div class="report-card"><span class="report-icon" data-icon="dashboard"></span><h3>P&L Statement</h3><p>Full profit and loss for any period.</p><button class="btn btn-primary" data-report="pl">Generate</button></div>
+      <div class="report-card"><span class="report-icon" data-icon="package"></span><h3>Inventory Report</h3><p>Stock on hand, valuation, and movement.</p><button class="btn btn-primary" data-report="inv">Generate</button></div>
+      <div class="report-card"><span class="report-icon" data-icon="briefcase"></span><h3>Investor Snapshot</h3><p>One-page overview of KPIs and growth.</p><button class="btn btn-primary" data-report="investor">Generate</button></div>
+      <div class="report-card"><span class="report-icon" data-icon="costs"></span><h3>Expense Report</h3><p>All expenses grouped by category.</p><button class="btn btn-primary" data-report="expense">Generate</button></div>
+      <div class="report-card"><span class="report-icon" data-icon="trendingUp"></span><h3>Sales Report</h3><p>Orders, channels, top products.</p><button class="btn btn-primary" data-report="sales">Generate</button></div>
+      <div class="report-card"><span class="report-icon" data-icon="download"></span><h3>Full Backup (JSON)</h3><p>Export every record for archive or import.</p><button class="btn btn-primary" data-report="backup">Download</button></div>
     </div>
     <div class="card" style="margin-top:18px" id="reportOutput" hidden><h3 id="reportTitle"></h3><div id="reportBody"></div></div>
   </div>
@@ -426,9 +541,9 @@
       <div class="card"><h3>Theme & Display</h3>
         <div class="form-group"><label>Theme</label>
           <div class="theme-row">
-            <button class="theme-opt active" data-theme="light">☀️ Light</button>
-            <button class="theme-opt" data-theme="dark">🌙 Dark</button>
-            <button class="theme-opt" data-theme="auto">🌓 Auto</button>
+            <button class="theme-opt active" data-theme="light"><span data-icon="sun"></span> Light</button>
+            <button class="theme-opt" data-theme="dark"><span data-icon="moon"></span> Dark</button>
+            <button class="theme-opt" data-theme="auto"><span data-icon="refresh"></span> Auto</button>
           </div>
         </div>
         <div class="form-group"><label>Accent Color</label>
